@@ -38,18 +38,13 @@ public class ProductController {
 //        product.setDescription("This is a pixel 9 Fold");
 //        product.setAmount(Double.valueOf(900000));
 //        return product;
-        try {
-            if(productId < 1)
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid product id");
-            Product product = productService.getProductById(productId);
-            if(product == null) {
-                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-            }
-            return new ResponseEntity<>(from(product), HttpStatus.OK);
+        if(productId < 1)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid product id");
+        Product product = productService.getProductById(productId);
+        if(product == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No Product found with id " + productId);
         }
-        catch (ResponseStatusException e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
+        return new ResponseEntity<>(from(product), HttpStatus.OK);
     }
 
     @PostMapping("/products")
@@ -64,8 +59,9 @@ public class ProductController {
             Product ceatedProduct = productService.createProduct(product);
             return new ResponseEntity<>(from(ceatedProduct),HttpStatus.OK);
         }catch (ResponseStatusException e) {
-            System.out.println(e.getMessage());
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            throw e;
+//            System.out.println(e.getMessage());
+//            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -107,5 +103,10 @@ public class ProductController {
             product.setCategory(category);
         }
         return product;
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<String> handleException(ResponseStatusException exception) {
+        return new ResponseEntity<>(exception.getMessage(), exception.getStatusCode());
     }
 }
